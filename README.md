@@ -37,7 +37,7 @@ Then in your config (`$HOME/.config/lambda-pad/lambda-pad.hs`), write:
 Add any other game(s) you want, then start `lambda-pad` !
 
     cd
-    lambda-pad
+    lambda-pad -g minecraft
 
 ## Copying into Config Directory
 
@@ -81,4 +81,4 @@ And add the tweaked game
 Repeat for any other game(s) you want, then start `lambda-pad` !
 
     cd
-    lambda-pad
+    lambda-pad -g minecraft
