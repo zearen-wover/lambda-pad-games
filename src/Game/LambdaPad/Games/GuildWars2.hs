@@ -2,7 +2,7 @@
 module Game.LambdaPad.Games.GuildWars2 ( guildWars2 ) where
 
 import Control.Monad ( when )
-import Control.Lens ( (.=) )
+import Control.Lens ( (^.), (.=), to, use )
 import Control.Lens.TH ( makeLenses )
 import Data.Algebra.Boolean (Boolean(..))
 import Prelude hiding ( (&&), (||),  not )
@@ -18,7 +18,7 @@ data GuildWars2 = GuildWars2
     , _gw2MouseResidual :: !(Float, Float)
     , _gw2ScrollResidual :: !(Float, Float)
     , _gw2UndoDir :: LambdaPad GuildWars2 ()
-    , _gw2LeftStickPress :: !StickPressed
+    , _gw2LeftStickPressed :: !StickPressed
     , _gw2Panning :: !Bool
     }
 makeLenses ''GuildWars2
@@ -33,10 +33,10 @@ guildWars2 mouseSpeed = package $ GameConfig
           conn <- connect
           (width, height) <- getScreenSize conn
           return $ GuildWars2
-              { gw2SConn = conn
+              { gw2Conn = conn
               , gw2MouseSpeed = mouseSpeed * fromIntegral (max width height)
               , _gw2MouseResidual = (0, 0)
-              , _gw2ScrollResidual = 0
+              , _gw2ScrollResidual = (0, 0)
               , _gw2UndoDir = return ()
               , _gw2LeftStickPressed = emptyStickPressed
               , _gw2Panning = False
@@ -57,15 +57,15 @@ guildWars2 mouseSpeed = package $ GameConfig
           buttonAsKeys rb shiftMode [K._0]
 
           withDPad gw2UndoDir
-              [ dirAsKey N true [K._F1]
-              , dirAsKey E true [K._F2]
-              , dirAsKey S true [K._F3]
-              , dirAsKey W true [K._F4]
+              [ dirAsKeys N true [K._F1]
+              , dirAsKeys E true [K._F2]
+              , dirAsKeys S true [K._F3]
+              , dirAsKeys W true [K._F4]
 
-              , dirAsKey N shiftMode [K._T]
-              , dirAsKey E shiftMode [K._Tab]
-              , dirAsKey S shiftMode [K._Ctrl, K._T]
-              , dirAsKey W shiftMode [K._Shift, K._Tab]
+              , dirAsKeys N shiftMode [K._T]
+              , dirAsKeys E shiftMode [K._Tab]
+              , dirAsKeys S shiftMode [K._Ctrl, K._T]
+              , dirAsKeys W shiftMode [K._Shift, K._Tab]
               ]
 
           buttonAsKeys rs true [K._F]
@@ -79,13 +79,13 @@ guildWars2 mouseSpeed = package $ GameConfig
           buttonAsKeys back shiftMode [K._M]
           
           buttonAsKeys ls true [K._V]
-          stickAsKeys (gw2LeftStickPress.ePress) leftStick (Horiz (>0.2))
+          stickAsKeys (gw2LeftStickPressed.ePress) leftStick (Horiz (>0.2))
               true [K._E]
-          stickAsKeys (gw2LeftStickPress.wPress) leftStick (Horiz (<(-0.2)))
+          stickAsKeys (gw2LeftStickPressed.wPress) leftStick (Horiz (<(-0.2)))
               true [K._Q]
-          stickAsKeys (gw2LeftStickPress.nPress) leftStick (Vert (>0.2))
+          stickAsKeys (gw2LeftStickPressed.nPress) leftStick (Vert (>0.2))
               true [K._W]
-          stickAsKeys (gw2LeftStickPress.sPress) leftStick (Vert (<(-0.2)))
+          stickAsKeys (gw2LeftStickPressed.sPress) leftStick (Vert (<(-0.2)))
               true [K._S]
 
           stickAsKeys gw2Panning rightStick (Push (>0.05))
@@ -105,7 +105,7 @@ guildWars2 mouseSpeed = package $ GameConfig
                 when (isMouse) $ if isScroll
                   then stickAsScroll 0.05 10 gw2MouseResidual rightStick
                   else do
-                    mouseSpeed' <- fmap gw2MouseSpeed get
+                    mouseSpeed' <- use $ to gw2MouseSpeed
                     stickAsMouse 0.05 mouseSpeed' gw2MouseResidual rightStick
     }
 
