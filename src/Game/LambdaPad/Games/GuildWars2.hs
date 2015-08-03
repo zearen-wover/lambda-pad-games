@@ -4,7 +4,7 @@ module Game.LambdaPad.Games.GuildWars2
   ( guildWars2, GuildWars2Flags(..), guildWars2Config 
   ) where
 
-import Control.Applicative ( (<$>) )
+import Control.Applicative ( (<$>), (<*>) )
 import Control.Monad ( when )
 import Control.Lens ( (^.), (.=), to, use )
 import Control.Lens.TH ( makeLenses )
@@ -20,6 +20,7 @@ import qualified Test.Robot.Types as K
 
 data GuildWars2Flags = GuildWars2Flags
     { gw2fMouseSpeed :: Float
+    , gw2fDeadZone :: Float
     }
 
 data GuildWars2 = GuildWars2
@@ -47,6 +48,13 @@ guildWars2 = package $ PackageConfig
              , Opt.showDefault
              , Opt.metavar "FLOAT"
              , Opt.help "Set the speed of the curser"
+             ])
+        <*> (Opt.option Opt.auto $ mconcat
+             [ Opt.long "dead-zone"
+             , Opt.value 0.05
+             , Opt.showDefault
+             , Opt.metavar "FLOAT"
+             , Opt.help "Set the dead zone"
              ])
     , packageGameConfig = guildWars2Config
     }
@@ -112,7 +120,7 @@ guildWars2Config (GuildWars2Flags{..}) = GameConfig
           stickAsKeys (gw2LeftStickPressed.sPress) leftStick (Vert (<(-0.2)))
               true [K._S]
 
-          stickAsKeys gw2Panning rightStick (Push (>0.05))
+          stickAsKeys gw2Panning rightStick (Push (>gw2fDeadZone))
               (not mouseMode) [K.rightButton]
           -- If we enter mouse mode, we should stop panning.
           onTrigger leftTrigger (mouseMode && whenUser (^.gw2Panning)) $ do
@@ -122,15 +130,16 @@ guildWars2Config (GuildWars2Flags{..}) = GameConfig
           onTick $ do
             isPanning <- use $ gw2Panning
             if isPanning
-              then stickAsMouse 0.05 400 gw2MouseResidual rightStick
+              then stickAsMouse gw2fDeadZone 400 gw2MouseResidual rightStick
               else do 
                 isMouse <- isPad mouseMode
                 isScroll <- isPad shiftMode
                 when (isMouse) $ if isScroll
-                  then stickAsScroll 0.05 10 gw2MouseResidual rightStick
+                  then stickAsScroll gw2fDeadZone 10 gw2MouseResidual rightStick
                   else do
                     mouseSpeed <- use $ to gw2MouseSpeed
-                    stickAsMouse 0.05 mouseSpeed gw2MouseResidual rightStick
+                    stickAsMouse gw2fDeadZone mouseSpeed gw2MouseResidual
+                        rightStick
     }
 
 shiftMode :: Filter user
