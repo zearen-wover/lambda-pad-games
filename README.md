@@ -37,7 +37,7 @@ Then in your config (`$HOME/.config/lambda-pad/lambda-pad.hs`), write:
 Add any other game(s) you want, then start `lambda-pad` !
 
     cd
-    lambda-pad -g minecraft
+    lambda-pad minecraft
 
 ## Copying into Config Directory
 
@@ -60,8 +60,8 @@ Then cd into the config directory and edit the copied config.
 First, we need to convert the module declaration to reflect it's new home and do
 our tweaking.
 
-    - module Game.LambdaPad.Games.Minecraft ( minecraft ) where
-    + module Games.Minecraft ( minecraft ) where
+    - module Game.LambdaPad.Games.Minecraft
+    + module Games.Minecraft
     ...
 
 Next we edit the config.
@@ -81,4 +81,4 @@ And add the tweaked game
 Repeat for any other game(s) you want, then start `lambda-pad` !
 
     cd
-    lambda-pad -g minecraft
+    lambda-pad minecraft

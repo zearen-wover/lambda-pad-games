@@ -19,7 +19,7 @@ library
   build-depends:
     base >= 4.7 && < 4.8,
     cond >= 0.3 && < 0.5,
-    lambda-pad,
+    lambda-pad >= 0.1 && < 0.2,
     lens >= 3.0 && < 5.0,
     robot >=1.4 && <1.5
   hs-source-dirs:      src

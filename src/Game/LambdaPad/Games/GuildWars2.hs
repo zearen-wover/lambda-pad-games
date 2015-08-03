@@ -1,16 +1,26 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Game.LambdaPad.Games.GuildWars2 ( guildWars2 ) where
+module Games.GuildWars2
+  ( guildWars2, GuildWars2Flags(..), guildWars2Config 
+  ) where
 
+import Control.Applicative ( (<$>) )
 import Control.Monad ( when )
 import Control.Lens ( (^.), (.=), to, use )
 import Control.Lens.TH ( makeLenses )
 import Data.Algebra.Boolean (Boolean(..))
+import Data.Monoid ( mconcat )
 import Prelude hiding ( (&&), (||),  not )
 
 import Game.LambdaPad.GameConfig
 import Game.LambdaPad.GameConfig.Robot
 
+import qualified Options.Applicative as Opt
 import qualified Test.Robot.Types as K
+
+data GuildWars2Flags = GuildWars2Flags
+    { gw2fMouseSpeed :: Float
+    }
 
 data GuildWars2 = GuildWars2
     { gw2Conn :: !Connection
@@ -26,15 +36,29 @@ makeLenses ''GuildWars2
 instance HasRobot GuildWars2 where
     getConn = gw2Conn
 
-guildWars2 :: Float -> PackagedGameConfig
-guildWars2 mouseSpeed = package $ GameConfig
-    { gameName = "gw2"
-    , newUserData = do
+guildWars2 :: PackagedGameConfig
+guildWars2 = package $ PackageConfig
+    { packageCommand = "gw2"
+    , packageName = "Guild Wars 2"
+    , packageFlags = GuildWars2Flags
+        <$> (Opt.option Opt.auto $ mconcat
+             [ Opt.long "mouse-speed"
+             , Opt.value 1.0
+             , Opt.showDefault
+             , Opt.metavar "FLOAT"
+             , Opt.help "Set the speed of the curser"
+             ])
+    , packageGameConfig = guildWars2Config
+    }
+
+guildWars2Config :: GuildWars2Flags -> GameConfig GuildWars2
+guildWars2Config (GuildWars2Flags{..}) = GameConfig
+    { newUserData = do
           conn <- connect
           (width, height) <- getScreenSize conn
           return $ GuildWars2
               { gw2Conn = conn
-              , gw2MouseSpeed = mouseSpeed * fromIntegral (max width height)
+              , gw2MouseSpeed = gw2fMouseSpeed * fromIntegral (max width height)
               , _gw2MouseResidual = (0, 0)
               , _gw2ScrollResidual = (0, 0)
               , _gw2UndoDir = return ()
@@ -105,8 +129,8 @@ guildWars2 mouseSpeed = package $ GameConfig
                 when (isMouse) $ if isScroll
                   then stickAsScroll 0.05 10 gw2MouseResidual rightStick
                   else do
-                    mouseSpeed' <- use $ to gw2MouseSpeed
-                    stickAsMouse 0.05 mouseSpeed' gw2MouseResidual rightStick
+                    mouseSpeed <- use $ to gw2MouseSpeed
+                    stickAsMouse 0.05 mouseSpeed gw2MouseResidual rightStick
     }
 
 shiftMode :: Filter user
