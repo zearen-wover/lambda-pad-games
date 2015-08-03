@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Games.GuildWars2
+module Game.LambdaPad.Games.GuildWars2
   ( guildWars2, GuildWars2Flags(..), guildWars2Config 
   ) where
 
